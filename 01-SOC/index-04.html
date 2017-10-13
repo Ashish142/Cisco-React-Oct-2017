@@ -37,12 +37,16 @@
 				this.hra = 0;
 				this.da = 0;
 				this.tax = 0;
+
+				this.onSalaryChange = null;
 				this.salary = 0;
 			}
 			calculate(){
 				let gross = this.basic + this.hra + this.da;
 				let net = gross * ((100-this.tax)/100);
 				this.salary = net;
+				if (typeof this.onSalaryChange === 'function')
+					this.onSalaryChange();
 			}
 		}
 
@@ -73,10 +77,12 @@
 				$('#tdHra').html(calculator.hra);
 				$('#tdDa').html(calculator.da);
 				$('#tdTax').html(calculator.tax);
-				$('#tdSalary').html(calculator.salary);
+				
 			});
 
-			
+			calculator.onSalaryChange = function(){
+				$('#tdSalary').html(calculator.salary);
+			}
 		});
 	</script>
 </head>
