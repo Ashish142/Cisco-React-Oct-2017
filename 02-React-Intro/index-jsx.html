@@ -8,17 +8,32 @@
 	<script src="babel.min.js"></script>
 	<script type="text/babel">
 		class HelloWorld extends React.Component{
+			state = {
+				message : ''
+			};
+
+			constructor(){
+				super();
+				this.onBtnRenderClick = this.onBtnRenderClick.bind(this);
+			}
+			onBtnRenderClick(){
+				let displayMessage = this.refs.txtMessage.value;
+				this.setState({message : displayMessage});
+			}
 			render(){
 				return (
 					<div>
-						<button>Render</button>
-						<h1>Welcome to React.js!</h1>
+						<label>Message : </label>
+						<input type="text" ref="txtMessage"/>	
+						<button onClick={this.onBtnRenderClick}>Render</button>
+						<h1>{this.state.message}</h1>
 					</div>
 				);
 			}
 		}
+		
 
-		ReactDOM.render(<HelloWorld />, 
+		ReactDOM.render(<HelloWorld/>, 
 				document.getElementById('content'));
 	</script>
 </head>
