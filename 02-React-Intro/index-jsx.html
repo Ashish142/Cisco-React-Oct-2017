@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>React Intro</title>
+	<script src="react.js"></script>
+	<script src="react-dom.js"></script>
+	<script src="babel.min.js"></script>
+	<script type="text/babel">
+		class HelloWorld extends React.Component{
+			render(){
+				return (
+					<div>
+						<button>Render</button>
+						<h1>Welcome to React.js!</h1>
+					</div>
+				);
+			}
+		}
+
+		ReactDOM.render(<HelloWorld />, 
+				document.getElementById('content'));
+	</script>
+</head>
+<body>
+	
+	<div id="content"></div>
+</body>
+</html>

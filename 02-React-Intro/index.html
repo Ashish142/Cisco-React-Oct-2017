@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>React Intro</title>
+	<script src="react.js"></script>
+	<script src="react-dom.js"></script>
+	<script>
+		class HelloWorld extends React.Component{
+			render(){
+				return React.createElement('div', null, 
+					React.createElement('button', null, 'Render'),
+					React.createElement('h1', null, this.props.message)
+				);
+			}
+		}
+
+		window.addEventListener('DOMContentLoaded', init);
+		function init(){
+			//document.getElementById('btnRender').addEventListener('click', onBtnRenderClick);
+
+			var displayMessage = 'Welcome to React.js!';
+			ReactDOM.render(React.createElement(HelloWorld, {message : displayMessage}), 
+				document.getElementById('content'));
+		}
+		function onBtnRenderClick(){
+			var displayMessage = prompt('Enter the message :');
+			
+		}
+	</script>
+</head>
+<body>
+	
+	<div id="content"></div>
+</body>
+</html>
