@@ -30,9 +30,28 @@
 			return parseInt(this, 10);
 		};
 
-		//Model
-		class SalaryCalculatorModel{
+		//EventEmitter
+		class EventEmitter{
 			constructor(){
+				this.__subscribers = {};
+			}
+			subscribe(evtName, subscriptionFn){
+				this.__subscribers[evtName] = this.__subscribers[evtName] || [];
+				if (typeof subscriptionFn === 'function')
+					this.__subscribers[evtName].push(subscriptionFn);
+			}
+			trigger(evtName){
+				let subscriptionFns = this.__subscribers[evtName] || [];;
+				subscriptionFn.forEach(function(subscriptionFn){
+					if (typeof subscriptionFn === 'function')
+						subscriptionFn();
+				});
+			}
+		}
+		//Model
+		class SalaryCalculatorModel extends EventEmitter{
+			constructor(){
+				super();
 				this.__data = {
 					basic : 0,
 					hra : 0,
@@ -40,18 +59,8 @@
 					tax : 0,
 					salary : 0
 				};
-				this.__subscribers = {
-					basic : null,
-					hra : null,
-					da : null,
-					tax : null,
-					salary : null
-				}
 			}
-			subscribe(attrName, subscriptionFn){
-				if (typeof subscriptionFn === 'function')
-					this.__subscribers[attrName] = subscriptionFn;
-			}
+			
 			get(attrName){
 				return this.__data[attrName];
 			}
@@ -59,9 +68,8 @@
 				if (this.__data[attrName] === value) return;
 				this.__data[attrName] = value;
 				//trigger change notification for 'attrName'
-				let subscriptionFn = this.__subscribers[attrName];
-				if (typeof subscriptionFn === 'function')
-					subscriptionFn();
+				this.trigger(attrName);
+				
 			}
 			calculate(){
 				let gross = this.get('basic') + this.get('hra') + this.get('da');
