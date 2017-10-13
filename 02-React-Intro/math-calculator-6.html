@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Math Calculator</title>
+	<script src="react.js"></script>
+	<script src="react-dom.js"></script>
+	<script src="babel.min.js"></script>
+	<script type="text/babel">
+		class EventEmitter{
+			constructor(){
+				this.__subscribers = {};
+			}
+			subscribe(evtName, subscriptionFn){
+				this.__subscribers[evtName] = this.__subscribers[evtName] || [];
+				if (typeof subscriptionFn === 'function')
+					this.__subscribers[evtName].push(subscriptionFn);
+			}
+			trigger(evtName){
+				let subscriptionFns = this.__subscribers[evtName] || [];;
+				subscriptionFns.forEach(function(subscriptionFn){
+					if (typeof subscriptionFn === 'function')
+						subscriptionFn();
+				});
+			}
+		}
+		class MathCalculatorModel extends EventEmitter{
+			constructor(){
+				super();
+				this.n1 = 0;
+				this.n2 = 0;
+				this.result = 0;
+			}
+			add(n1, n2){
+				this.result = this.n1 + this.n2;
+				this.trigger('result');
+			}
+			subtract(n1, n2){
+				this.result = this.n1 - this.n2;
+				this.trigger('result');
+			}
+			multiply(n1, n2){
+				this.result = this.n1 * this.n2;
+				this.trigger('result');
+			}
+			divide(n1, n2){
+				this.result = this.n1 / this.n2;
+				this.trigger('result');
+			}
+		}
+		let MathCalculator = (props) => {
+			let model = props.model;
+			return (
+				<div>
+					<label htmlFor="">Number 1:</label>
+					<input type="number" onChange={(evt) => model.n1 = parseInt(evt.target.value, 10)}/>
+					<br />
+					<label htmlFor="">Number 2:</label>
+					<input type="number" onChange={(evt) => model.n2 = parseInt(evt.target.value, 10)}/>
+					<br />
+					<input type="button" value="Add"  onClick={() => model.add()}/>
+					<input type="button" value="Subtract" onClick={() => model.subtract()}/>
+					<input type="button" value="Multiply" onClick={() => model.multiply()}/>
+					<input type="button" value="Divide" onClick={()=> model.divide()}/>
+					<div>{model.result}</div>
+				</div>
+			)
+		}
+		let mathCalculatorModel = new MathCalculatorModel();
+		mathCalculatorModel.subscribe('result', renderApp);
+		function renderApp(){
+			ReactDOM.render(<MathCalculator model={mathCalculatorModel}/>, document.getElementById('content'));
+		}
+		renderApp();
+	</script>
+</head>
+<body>
+	<h1>Math Calculator</h1>
+	<hr/>
+	<div id="content">
+		
+	</div>
+</body>
+</html>

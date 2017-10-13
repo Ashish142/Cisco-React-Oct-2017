@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Math Calculator</title>
+	<script src="react.js"></script>
+	<script src="react-dom.js"></script>
+	<script src="babel.min.js"></script>
+	<script type="text/babel">
+		class EventEmitter{
+			constructor(){
+				this.__subscribers = {};
+			}
+			subscribe(evtName, subscriptionFn){
+				this.__subscribers[evtName] = this.__subscribers[evtName] || [];
+				if (typeof subscriptionFn === 'function')
+					this.__subscribers[evtName].push(subscriptionFn);
+			}
+			trigger(evtName){
+				let subscriptionFns = this.__subscribers[evtName] || [];;
+				subscriptionFns.forEach(function(subscriptionFn){
+					if (typeof subscriptionFn === 'function')
+						subscriptionFn();
+				});
+			}
+		}
+		class MathCalculatorModel extends EventEmitter{
+			constructor(){
+				super();
+				this.n1 = 0;
+				this.n2 = 0;
+				this.result = 0;
+			}
+			add(n1, n2){
+				this.result = this.n1 + this.n2;
+				this.trigger('result');
+			}
+			subtract(n1, n2){
+				this.result = this.n1 - this.n2;
+				this.trigger('result');
+			}
+			multiply(n1, n2){
+				this.result = this.n1 * this.n2;
+				this.trigger('result');
+			}
+			divide(n1, n2){
+				this.result = this.n1 / this.n2;
+				this.trigger('result');
+			}
+		}
+		class MathCalculator extends React.Component{
+			state = {
+				result : 0
+			};
+			constructor(){
+				super();
+				this.setN1 = this.setN1.bind(this);
+				this.setN2 = this.setN2.bind(this);
+				this.onBtnAddClick = this.onBtnAddClick.bind(this);
+				this.onBtnSubtractClick = this.onBtnSubtractClick.bind(this);
+				this.onBtnMultiplyClick = this.onBtnMultiplyClick.bind(this);
+				this.onBtnDivideClick = this.onBtnDivideClick.bind(this);
+			}
+			setN1(){
+				this.props.model.n1 = parseInt(this.refs.txtNumber1.value, 10);
+			}
+			setN2(){
+				this.props.model.n2 = parseInt(this.refs.txtNumber2.value, 10);
+			}
+			
+			onBtnAddClick(){
+				this.props.model.add();
+			}
+			onBtnSubtractClick(){
+				this.props.model.subtract();
+			}
+			onBtnMultiplyClick(){
+				this.props.model.multiply();
+			}
+			onBtnDivideClick(){
+				this.props.model.divide();
+			}
+			render(){
+				return (
+					<div>
+						<label htmlFor="">Number 1:</label>
+						<input type="number" ref="txtNumber1" onChange={this.setN1}/>
+						<br />
+						<label htmlFor="">Number 2:</label>
+						<input type="number" ref="txtNumber2" onChange={this.setN2}/>
+						<br />
+						<input type="button" value="Add"  onClick={this.onBtnAddClick}/>
+						<input type="button" value="Subtract" onClick={this.onBtnSubtractClick}/>
+						<input type="button" value="Multiply" onClick={this.onBtnMultiplyClick}/>
+						<input type="button" value="Divide" onClick={this.onBtnDivideClick}/>
+						<div>{this.props.model.result}</div>
+					</div>
+				)
+			}
+		}
+		let mathCalculatorModel = new MathCalculatorModel();
+		mathCalculatorModel.subscribe('result', renderApp);
+		function renderApp(){
+			ReactDOM.render(<MathCalculator model={mathCalculatorModel}/>, document.getElementById('content'));
+		}
+		renderApp();
+	</script>
+</head>
+<body>
+	<h1>Math Calculator</h1>
+	<hr/>
+	<div id="content">
+		
+	</div>
+</body>
+</html>
