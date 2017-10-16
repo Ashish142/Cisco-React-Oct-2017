@@ -44,40 +44,129 @@
 		6. Sort the bugs
 		7. Persist the bugs in the server
 	</script>
+	<script src="react.js"></script>
+	<script src="react-dom.js"></script>
+	<script src="babel.min.js"></script>
+	<script type="text/babel">
+		class EventEmitter{
+			constructor(){
+				this.__subscribers = [];
+			}
+			subscribe(subscriptionFn){
+				if (typeof subscriptionFn === 'function')
+					this.__subscribers.push(subscriptionFn);
+			}
+			trigger(){
+				let subscriptionFns = this.__subscribers || [];
+				subscriptionFns.forEach(function(subscriptionFn){
+					if (typeof subscriptionFn === 'function')
+						subscriptionFn();
+				});
+			}
+		}
+
+		class BugsList extends EventEmitter{
+			list = [];
+			constructor(){
+				super();
+			}
+			addNew(bugName){
+				let newBug = {
+					name : bugName,
+					isClosed : false
+				};
+				this.list.push(newBug);
+				this.trigger();
+			}
+			toggle(bug){
+				bug.isClosed = !bug.isClosed;
+				this.trigger();
+			}
+			removeClosed(){
+				for(let index=this.list.length-1; index >= 0; index--){
+					if(this.list[index].isClosed)
+						this.list.splice(index, 1);
+				}
+				this.trigger();
+			}
+		}
+
+
+		class BugTracker extends React.Component{
+			constructor(){
+				super();
+				this.onCreateClick = this.onCreateClick.bind(this);
+				this.onRemoveClosedClick = this.onRemoveClosedClick.bind(this);
+			}
+			onCreateClick(){
+				let bugName = this.refs.txtBugName.value;
+				this.props.model.addNew(bugName);
+			}
+			onBugClick(bugToToggle){
+				this.props.model.toggle(bugToToggle);
+			}
+			onRemoveClosedClick(){
+				this.props.model.removeClosed();
+			}
+			render(){
+				let list = this.props.model.list,
+					bugItems = list.map((bug, index) => {
+						let bugStyle = bug.isClosed ? 'bugname closed' : 'bugname';
+						return (
+							<li key={index}>
+								<span className={bugStyle} onClick={this.onBugClick.bind(this, bug)}>
+									{bug.name}
+								</span>
+								<div>[{bug.isClosed.toString()}]</div>
+							</li>
+						)
+					}),
+					closedCount = list.reduce((result, bug) => bug.isClosed ? ++result : result, 0)
+				return(
+					<div>
+						<section className="stats">
+							<span className="closed">{closedCount}</span>
+							<span> / </span>
+							<span>{list.length}</span>
+						</section>
+						<section className="sort">
+							<label>Order By :</label>
+							<select name="" id="">
+								<option value=""></option>
+								<option value=""></option>
+							</select>
+							<label>Descending :</label>
+							<input type="checkbox" name="" id="" />
+						</section>
+						<section className="edit">
+							<label>Bug Name :</label>
+							<input type="text" ref="txtBugName" />
+							<input type="button" value="Create New" onClick={this.onCreateClick}/>
+						</section>
+						<section className="list">
+							<ol>
+								{bugItems}
+							</ol>
+							<input type="button" value="Remove Closed" onClick={this.onRemoveClosedClick} />
+						</section>
+					</div>
+				)
+			}
+		}
+
+		window.bugsList = new BugsList();
+		function renderApp(){
+			ReactDOM.render(<BugTracker model={bugsList}/>, document.getElementById('content'));
+		}
+		bugsList.subscribe(renderApp);
+		renderApp();
+	</script>
 </head>
 <body>
 	<h1>Bug Tracker</h1>
 	<hr>
 	<div id="content">
-		<div>
-			<section class="stats">
-				<span class="closed">1</span>
-				<span> / </span>
-				<span>3</span>
-			</section>
-			<section class="sort">
-				<label for="">Order By :</label>
-				<select name="" id="">
-					<option value=""></option>
-					<option value=""></option>
-				</select>
-				<label for="">Descending :</label>
-				<input type="checkbox" name="" id="">
-			</section>
-			<section class="edit">
-				<label for="">Bug Name :</label>
-				<input type="text" name="" id="">
-				<input type="button" value="Create New">
-			</section>
-			<section class="list">
-				<ol>
-					<li><span class="bugname">This is bug - 1</span></li>
-					<li><span class="bugname closed">This is bug - 2</span></li>
-					<li><span class="bugname">This is bug - 3</span></li>
-				</ol>
-				<input type="button" value="Remove Closed">
-			</section>
-		</div>
+		
 	</div>
 </body>
 </html>
