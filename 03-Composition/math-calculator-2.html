@@ -18,26 +18,61 @@
 	<script src="react-dom.js"></script>
 	<script src="babel.min.js"></script>
 	<script type="text/babel">
-		class MathCalculatorModel{
-			add(n1, n2){
-				return n1 + n2;
+		class EventEmitter{
+			constructor(){
+				this.__subscribers = {};
 			}
-			subtract(n1, n2){
-				return n1 - n2;
+			subscribe(evtName, subscriptionFn){
+				this.__subscribers[evtName] = this.__subscribers[evtName] || [];
+				if (typeof subscriptionFn === 'function')
+					this.__subscribers[evtName].push(subscriptionFn);
 			}
-			multiply(n1, n2){
-				return n1 * n2;
+			trigger(evtName){
+				let subscriptionFns = this.__subscribers[evtName] || [];;
+				subscriptionFns.forEach(function(subscriptionFn){
+					if (typeof subscriptionFn === 'function')
+						subscriptionFn();
+				});
 			}
-			divide(n1, n2){
-				return n1 / n2;
+		}
+		class MathCalculatorModel extends EventEmitter{
+			constructor(){
+				super();
+				this.n1 = 0;
+				this.n2 = 0;
+				this.result = 0;
+				this.stats = {
+					positiveCount : 0,
+					negativeCount : 0
+				};
+			}
+			updateStats(){
+				if (this.result >= 0){
+					++this.stats.positiveCount;
+				} else {
+					++this.stats.negativeCount;
+				}
+			}
+			updateResult(value){
+				this.result = value;
+				this.updateStats();
+				this.trigger('result');
+			}
+			add(){
+				this.updateResult(this.n1 + this.n2);
+			}
+			subtract(){
+				this.updateResult(this.n1 - this.n2);
+			}
+			multiply(){
+				this.updateResult(this.n1 * this.n2);
+			}
+			divide(){
+				this.updateResult(this.n1 / this.n2);
 			}
 		}
 		class MathCalculator extends React.Component{
-			state = {
-				result : 0
-			};
-			n1 = 0;
-			n2 = 0;
+			
 			constructor(){
 				super();
 				this.onBtnAddClick = this.onBtnAddClick.bind(this);
@@ -47,28 +82,23 @@
 			}
 			
 			onNumber1Change(value){
-				this.n1 = value;
+				this.props.model.n1 = value;
 			}
 			onNumber2Change(value){
-				this.n2 = value;
+				this.props.model.n2 = value;
 			}
 			onBtnAddClick(){
-				//let inputs = this.getInputs();
-				let result = this.props.model.add(this.n1, this.n2);
-				this.setState({result : result});
+				this.props.model.add();
 			}
 			onBtnSubtractClick(){
-				let result = this.props.model.subtract(this.n1, this.n2);
-				this.setState({result : result});
+				this.props.model.subtract();
 			}
 			onBtnMultiplyClick(){
 				
-				let result = this.props.model.multiply(this.n1, this.n2);
-				this.setState({result : result});
+				this.props.model.multiply();
 			}
 			onBtnDivideClick(){
-				let result = this.props.model.divide(this.n1, this.n2);
-				this.setState({result : result});
+				this.props.model.divide();
 			}
 			render(){
 				return (
@@ -82,8 +112,8 @@
 						<input type="button" value="Subtract" onClick={this.onBtnSubtractClick}/>
 						<input type="button" value="Multiply" onClick={this.onBtnMultiplyClick}/>
 						<input type="button" value="Divide" onClick={this.onBtnDivideClick}/>
-						<MathCalculatorResult data={this.state.result}></MathCalculatorResult>
-						<MathCalculatorStats value={this.state.result}></MathCalculatorStats>
+						<MathCalculatorResult data={this.props.model.result}></MathCalculatorResult>
+						<MathCalculatorStats value={this.props.model.stats}></MathCalculatorStats>
 					</div>
 				)
 			}
@@ -116,37 +146,26 @@
 		}
 
 		class MathCalculatorStats extends React.Component{
-			state = {
-				positiveCount : 0,
-				negativeCount : 0
-			};
+			
 			render(){
-				let value = this.props.value;
-				let updatedPositiveCount = 0,
-					updatedNegativeCount = 0;
-
-				if (value >= 0){
-					updatedPositiveCount = this.state.positiveCount + 1;
-				} else {
-					updatedNegativeCount = this.state.negativeCount + 1;
-				}
-				/*this.setState({
-					positiveCount : updatedPositiveCount,
-					negativeCount : updatedNegativeCount
-				});*/
+			
 				return(
 					<div>
 						<label>Positive Count : </label>
-						<span className="positive result">{updatedPositiveCount}</span>
+						<span className="positive result">{this.props.value.positiveCount}</span>
 						<label>Negative Count : </label>
-						<span className="negative result">{updatedNegativeCount}</span>
+						<span className="negative result">{this.props.value.negativeCount}</span>
 					</div>
 				);
 			}
 		}
 
 		let mathCalculatorModel = new MathCalculatorModel();
-		ReactDOM.render(<MathCalculator model={mathCalculatorModel}/>, document.getElementById('content'));
+		mathCalculatorModel.subscribe('result', renderApp);
+		function renderApp(){
+			ReactDOM.render(<MathCalculator model={mathCalculatorModel}/>, document.getElementById('content'));
+		}
+		renderApp();
 	</script>
 </head>
 <body>
