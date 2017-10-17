@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>State Manager</title>
+	<script src="stateManager.js"></script>
+	<script src="react.js"></script>
+	<script src="react-dom.js"></script>
+	<script src="babel.min.js"></script>
+	<script type="text/babel">
+		//state & behavior
+		function spinnerReducer(currentState = 0, action){
+			if (action.type === 'INCREMENT')
+				return currentState + action.payload;
+			if (action.type === 'DECREMENT')
+				return currentState - action.payload;
+			return currentState;
+		}
+		var store = sm.createStore(spinnerReducer);
+
+		
+		var spinnerActions = {
+			increment : function(value){
+				return { type : 'INCREMENT', payload : value };
+			},
+			decrement : function(value){
+				return { type : 'DECREMENT', payload : value};
+			}
+		}
+
+		
+
+		//UI
+		
+		
+		class Spinner extends React.Component{
+			constructor(){
+				super();
+				this.onIncrementClick = this.onIncrementClick.bind(this);
+				this.onDecrementClick = this.onDecrementClick.bind(this);
+			}
+			onIncrementClick(){
+				let value = parseInt(this.refs.txtValue.value, 10);
+				this.props.increment(value)
+			}
+			onDecrementClick(){
+				let value = parseInt(this.refs.txtValue.value, 10);
+				this.props.decrement(value);
+			}
+			render(){
+				var spinnerValue = this.props.value;
+				return(
+					<div>
+						<input type="text" ref="txtValue" />
+						<input type="button" value="Decrement" onClick={this.onDecrementClick}/>
+						<span>[ {spinnerValue} ]</span>
+						<input type="button" value="Increment" onClick={this.onIncrementClick}/>
+					</div>
+				)
+			}
+		}
+	
+		
+		function renderApp(){
+			var state = store.getState(),
+				actions = sm.bindActionCreators(spinnerActions, store.dispatch);
+
+			/*ReactDOM.render(<Spinner value={state} increment={actions.increment} decrement={actions.decrement}/>, 
+				document.getElementById('content')
+			);*/
+			ReactDOM.render(<Spinner value={state} {...actions}/>, 
+				document.getElementById('content')
+			);
+		}
+		renderApp();
+		store.subscribe(renderApp);
+	</script>
+</head>
+<body>
+	<div id="content">
+	</div>
+</body>
+</html>
