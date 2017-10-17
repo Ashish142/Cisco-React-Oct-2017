@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Bug Tracker</title>
+	<style>
+		section{
+			margin-bottom: 10px;
+		}
+		.closed{
+			color : red;
+			text-decoration: line-through;
+			font-style: italic;
+			font-weight: bold;
+		}
+		.bugname, .stats{
+			font-size: 22pt;
+		}
+		.bugname{
+			cursor : pointer;
+		}
+		ol{
+			width: 500px;
+			list-style: none;
+			-webkit-padding-start : 0px;
+		}
+		body{
+			margin-left: 100px;
+		}
+		li{
+			margin-bottom: 10px;
+			padding: 10px;
+			border-radius: 5px;
+			border : 1px solid gray;
+			background-color: #e7e7e7;
+		}
+	</style>
+	<script type="text/usecases">
+		1. Add a new bug
+		2. List the bugs
+		3. Toggle the 'closed' status of any bug
+		4. Remove closed bugs
+		5. Display stats
+		6. Sort the bugs
+		7. Persist the bugs in the server
+
+		TODO:
+		1. Introduce the Bug class with toggle method
+		2. Break the BugTracker into BugStats, BugSort, BugEdit,  BugItem
+	</script>
+	<script src="react.js"></script>
+	<script src="react-dom.js"></script>
+	<script src="babel.min.js"></script>
+	<script src="redux.js"></script>
+	<script type="text/babel">
+		
+		//bugs
+		function bugsReducer(currentState = [], action){
+			if (action.type === 'ADD_NEW'){
+				let newBug = { name : action.payload, isClosed : false};
+				let newState = [...currentState, newBug];
+				return newState;
+			}
+			if (action.type === 'TOGGLE'){
+				let bugToToggle = action.payload,
+					toggledBug = { ...bugToToggle, isClosed : !bugToToggle.isClosed};
+				let newState = currentState.map(bug => bug === bugToToggle ? toggledBug : bug);
+				return newState;
+			}
+			if (action.type === 'REMOVE_CLOSED'){
+				let newState = currentState.filter(bug => !bug.isClosed);
+				return newState;
+			}
+			return currentState;
+		}
+
+		var bugActionsCreators = {
+			addNew : function(bugName){
+				return { type : 'ADD_NEW', payload : bugName};
+			},
+			toggle : function(bugToToggle){
+				return { type : 'TOGGLE' , payload : bugToToggle};
+			},
+			removeClosed : function(){
+				return { type : 'REMOVE_CLOSED' };
+			}
+		}
+
+		//spinner
+		function spinnerReducer(currentState = 0, action){
+			if (action.type === 'INCREMENT')
+				return currentState + action.payload;
+			if (action.type === 'DECREMENT')
+				return currentState - action.payload;
+			return currentState;
+		}
+		
+		var spinnerActionsCreators = {
+			increment : function(value){
+				return { type : 'INCREMENT', payload : value };
+			},
+			decrement : function(value){
+				return { type : 'DECREMENT', payload : value};
+			}
+		};
+
+		let BugStats = ({bugs}) => {
+			let closedCount = bugs.reduce((result, bug) => bug.isClosed ? ++result : result, 0)
+			return (
+				<section className="stats">
+					<span className="closed">{closedCount}</span>
+					<span> / </span>
+					<span>{bugs.length}</span>
+				</section>
+			)
+		};
+
+		let BugSort = () => (
+			<section className="sort">
+				<label>Order By :</label>
+				<select name="" id="">
+					<option value=""></option>
+					<option value=""></option>
+				</select>
+				<label>Descending :</label>
+				<input type="checkbox" name="" id="" />
+			</section>
+		);
+
+		class BugEdit extends React.Component{
+			constructor(){
+				super();
+				this.onCreateClick = this.onCreateClick.bind(this);
+			}
+			onCreateClick(){
+				let bugName = this.refs.txtBugName.value;
+				this.props.addNew(bugName);
+			}
+			render(){
+				return(
+					<section className="edit">
+						<label>Bug Name :</label>
+						<input type="text" ref="txtBugName" />
+						<input type="button" value="Create New" onClick={this.onCreateClick}/>
+					</section>
+				)
+			}
+		}
+
+		let BugItem = ({bug, toggle}) => {
+			let bugStyle = bug.isClosed ? 'bugname closed' : 'bugname';
+			return (
+				<li>
+					<span className={bugStyle} onClick={() => toggle(bug)}>
+						{bug.name}
+					</span>
+					<div>[{bug.isClosed.toString()}]</div>
+				</li>
+			);
+		};
+
+		let BugList = ({bugs, toggle, removeClosed}) => {
+			let bugItems = bugs.map((bug, index) => (
+				<BugItem key={index} bug={bug} toggle={toggle} />
+			));
+			return (
+				<section className="list">
+					<ol>
+						{bugItems}
+					</ol>
+					<input type="button" value="Remove Closed" onClick={() => removeClosed()} />
+				</section>
+			)
+		};
+
+		let BugTracker = ({ bugs, addNew, toggle, removeClosed }) => (
+			<div>
+				<BugStats bugs={bugs} />
+				<BugSort />
+				<BugEdit {...{addNew}} />
+				<BugList {...{bugs, toggle, removeClosed}} />
+			</div>
+		);
+		
+		class Spinner extends React.Component{
+			constructor(){
+				super();
+				this.onIncrementClick = this.onIncrementClick.bind(this);
+				this.onDecrementClick = this.onDecrementClick.bind(this);
+			}
+			onIncrementClick(){
+				let value = parseInt(this.refs.txtValue.value, 10);
+				this.props.increment(value)
+			}
+			onDecrementClick(){
+				let value = parseInt(this.refs.txtValue.value, 10);
+				this.props.decrement(value);
+			}
+			render(){
+				var spinnerValue = this.props.value;
+				return(
+					<div>
+						<input type="text" ref="txtValue" />
+						<input type="button" value="Decrement" onClick={this.onDecrementClick}/>
+						<span>[ {spinnerValue} ]</span>
+						<input type="button" value="Increment" onClick={this.onIncrementClick}/>
+					</div>
+				)
+			}
+		}
+
+
+		let allReducers = Redux.combineReducers({
+			bugs : bugsReducer,
+			spinner : spinnerReducer
+		});
+
+		window.store = Redux.createStore(allReducers);
+
+		let bugActions = Redux.bindActionCreators(bugActionsCreators, store.dispatch);
+		let spinnerActions = Redux.bindActionCreators(spinnerActionsCreators, store.dispatch);
+
+		function renderApp(){
+			let { bugs, spinner } = store.getState();
+			ReactDOM.render(
+				<div>
+					<BugTracker bugs={bugs} {...bugActions}/>
+					<hr/>
+					<Spinner value={spinner} {...spinnerActions} />
+				</div>, 
+			document.getElementById('content'));
+		}
+		store.subscribe(renderApp);
+		renderApp();
+	</script>
+</head>
+<body>
+	<h1>Bug Tracker</h1>
+	<hr>
+	<div id="content">
+		
+	</div>
+</body>
+</html>
